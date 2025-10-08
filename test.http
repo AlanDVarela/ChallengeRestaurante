@@ -1,8 +1,14 @@
 POST http://localhost:3000/users
-Content-Type: application/json
 
 {
   "name": "Alan Varela",
   "email": "alan@example.com",
   "emailVerified": true
 }
+
+### Obtener todos los usuarios
+GET http://localhost:3000/users
+Accept: application/json
+
+### Eliminar usuario por ID
+DELETE http://localhost:3000/users/68e68dade3ccec3716f2ddbf

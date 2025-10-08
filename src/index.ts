@@ -16,7 +16,6 @@ const app = express();
 
 app.use('/static', static_(path.join(__dirname, '..','public')));
 
-app.use('/static', static_(path.join(__dirname, '..','public')));
 
 // Parse JSON bodies
 app.use(express.json());
