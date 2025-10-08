@@ -1,16 +1,13 @@
 import { Router } from "express";
 import userRoutes from "./users/user.routes";
-import guideRoutes from "./guides/guide.routes";
-import experienceRoutes from "./experiences/experience.routes";
-import reservationRoutes from "./reservations/reservation.routes";
+import restaurantesRoutes from "./restaurantes/restaurantes.routes"
+
 import reviewRoutes from "./reviews/review.routes";
 
 const router = Router();
 
 router.use("/users", userRoutes);
-router.use("/guides", guideRoutes);
-router.use("/experiences", experienceRoutes);
-router.use("/reservations", reservationRoutes);
+router.use("/restaurantes", restaurantesRoutes);
 router.use("/reviews", reviewRoutes);
 
 export default router;
