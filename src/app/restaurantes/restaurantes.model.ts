@@ -1,31 +1,22 @@
-import { ObjectId } from 'mongoose';
+import mongoose, { Schema, model, Document, Types } from 'mongoose';
 import { StatusType } from '../varTypes';
 
-class Reservation {
-    _id?: ObjectId;
-    experienceId: ObjectId;
-    userId: ObjectId;
-    seats: number;
-    status: StatusType;
-    total: number;
-    createdAt: Date;
-    updatedAt: Date;
-
-    constructor(
-        experienceId: ObjectId,
-        userId: ObjectId,
-        seats: number,
-        total: number,
-        status: StatusType = 'pending'
-    ) {
-        this.experienceId = experienceId;
-        this.userId = userId;
-        this.seats = seats;
-        this.total = total;
-        this.status = status;
-        this.createdAt = new Date();
-        this.updatedAt = this.createdAt;
-    }
+export interface IRestaurante {
+    _id?: Types.ObjectId;
+    name: string;
+    location: string;
+    kitchen: string;
 }
 
-export default Reservation;
+const RestauranteSchema = new Schema(
+    {
+        name: { type: String, required: true },
+        location: { type: String, required: true },
+        kitchen: { type: String, required: true },
+    },
+    { timestamps: true }
+);
+
+const Restaurante = model<IRestaurante & Document>('Restaurante', RestauranteSchema);
+
+export default Restaurante;

@@ -1,30 +1,22 @@
-import { ObjectId } from "mongoose";
-import { UserType } from "../varTypes";
+import mongoose, { Schema, model, Document, Types } from 'mongoose';
+import { UserType } from '../varTypes';
 
-class User {
-    _id?: ObjectId;
+export interface IUser {
+    _id?: Types.ObjectId;
     name: string;
     email: string;
-    roles: UserType[];
     emailVerified: boolean;
-    dateOfBirth: Date;
-    createdAt: Date;
-    updatedAt: Date;
-
-    constructor(
-        name: string,
-        email: string,
-        dateOfBirth: Date,
-        roles: UserType[]
-    ) {
-        this.name = name;
-        this.email = email;
-        this.dateOfBirth = dateOfBirth;
-        this.roles = roles;
-        this.emailVerified = false;
-        this.createdAt = new Date();
-        this.updatedAt = this.createdAt;
-    }
 }
+
+const UserSchema = new Schema(
+    {
+        name: { type: String, required: true },
+        email: { type: String, required: true, unique: true },
+        emailVerified: { type: Boolean, default: false },
+    },
+    { timestamps: true }
+);
+
+const User = model<IUser & Document>('User', UserSchema);
 
 export default User;
