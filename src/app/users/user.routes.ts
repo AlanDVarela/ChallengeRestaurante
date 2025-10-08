@@ -16,14 +16,14 @@ router.get('/', listUsers);
 // Obtener por ID
 router.get('/:id', getUserById);
 
-// Crear (requiere auth)
-router.post('/', authMiddleware, createUser);
+// Crear (registro público)
+router.post('/register', createUser);
 
-// Actualizar (requiere auth)
-router.patch('/:id', authMiddleware, updateUser);
+// Actualizar (requiere auth) - por email
+router.patch('/update/:email', authMiddleware, updateUser);
 
-// Eliminar (requiere auth)
-router.delete('/:id', authMiddleware, deleteUser);
+// Eliminar (requiere auth) - por email
+router.delete('/delete/:email', authMiddleware, deleteUser);
 
 export default router;
 
