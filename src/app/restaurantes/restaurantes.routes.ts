@@ -30,4 +30,3 @@ router.patch('/:id', authMiddleware, updateRestaurante);
 router.delete('/:id', authMiddleware, deleteRestaurante);
 
 export default router;
-
