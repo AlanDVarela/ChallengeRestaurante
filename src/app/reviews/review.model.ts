@@ -1,39 +1,14 @@
-import { ObjectId } from "mongoose";
+import { Schema, model } from "mongoose";
 
-class Review {
-    _id?: ObjectId;
-    reservationId: ObjectId;
-    userId: ObjectId;
-    experienceId: ObjectId;
-    guideId: ObjectId;
-    experienceRating?: number;
-    guideRating?: number;
-    comment?: string;
-    photos?: string[];
-    createdAt: Date;
-    updatedAt: Date;
+const reviewSchema = new Schema({
+  restaurantId: {
+    type: Schema.Types.ObjectId,
+    ref: "Restaurant",
+    required: true
+  },
+  user: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: String,
+}, { timestamps: true });
 
-    constructor(
-        reservationId: ObjectId,
-        userId: ObjectId,
-        experienceId: ObjectId,
-        guideId: ObjectId,
-        rating?: number,
-        guideRating?: number,
-        comment?: string,
-        photos: string[] = []
-    ) {
-        this.reservationId = reservationId;
-        this.userId = userId;
-        this.experienceId = experienceId;
-        this.guideId = guideId;
-        this.experienceRating = rating;
-        this.guideRating = guideRating;
-        this.comment = comment;
-        this.photos = photos;
-        this.createdAt = new Date();
-        this.updatedAt = this.createdAt;
-    }
-}
-
-export default Review;
+export const Review = model("Review", reviewSchema);
