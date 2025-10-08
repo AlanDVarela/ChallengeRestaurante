@@ -14,18 +14,19 @@ import path from 'path'
 const port = process.env.PORT || 3000;
 const app = express();
 
-app.use('/static', static_(path.join(__dirname, '..','public')));
+
 
 
 // Parse JSON bodies
 app.use(express.json());
 
+app.use('/static', static_(path.join(__dirname, '..','public')));
+
 // Register routes (they expect JSON body parsing)
 app.use(routes);
 
 app.get('', (req, res)=> {
-
-    res.send("Api funciona")
+    res.sendFile(path.join(__dirname, 'views', 'index.html'))
 })
 //Swagger
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

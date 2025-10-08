@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalle Restaurante</title>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="hdr">
+    <h1 id="rTitle">Restaurante</h1>
+    <div class="nav">
+      <a class="btn" href="./index.html">Restaurantes</a>
+      <a class="btn" href="./users.html">Usuarios</a>
+    </div>
+  </div>
+
+  <div class="card" id="rInfo"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Reviews</h3>
+    <div id="reviews"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Agregar Review</h3>
+    <form class="form" id="formReview">
+      <input type="hidden" id="restaurantId"/>
+      <div>
+        <label>Usuario (texto simple o nombre)</label>
+        <input class="input" id="revUser" placeholder="Alan"/>
+      </div>
+      <div>
+        <label>Rating (1 a 5) *</label>
+        <select class="input" id="revRating" required>
+          <option value="">Selecciona</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+      <div>
+        <label>Comentario</label>
+        <textarea class="input" id="revComment" rows="3"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn btn-acc" type="submit">Guardar review</button>
+        <div id="msgV" class="small"></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer">UI mínima – Detalle</div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+const q = new URLSearchParams(location.search);
+const id = q.get('id');
+
+const elTitle = document.getElementById('rTitle');
+const elInfo  = document.getElementById('rInfo');
+const elReviews = document.getElementById('reviews');
+document.getElementById('restaurantId').value = id;
+
+async function fetchRestaurant(){
+  const res = await fetch(`${API}/restaurants`);
+  if(!res.ok) throw new Error('Error al cargar restaurantes');
+  const all = await res.json();
+  return all.find(r=> r._id===id);
+}
+async function fetchReviews(){
+  const res = await fetch(`${API}/restaurants/${id}/reviews`);
+  if(!res.ok) throw new Error('Error al cargar reviews');
+  return await res.json();
+}
+function infoView(r){
+  return `
+    <div class="row" style="justify-content:space-between;">
+      <div>
+        <div style="font-size:18px;font-weight:700">${r.name}</div>
+        <div class="small">${r.location || ''} ${r.cuisine ? ' · ' + r.cuisine : ''}</div>
+      </div>
+      <a class="btn" href="./index.html">← Volver</a>
+    </div>`;
+}
+function reviewItem(v){
+  return `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div><strong>${v.user || 'Anónimo'}</strong></div>
+        <div class="badge">★ ${v.rating}</div>
+      </div>
+      ${v.comment ? `<div style="margin-top:8px">${v.comment}</div>`:''}
+      <div class="small" style="margin-top:6px">${new Date(v.createdAt||v.updatedAt||Date.now()).toLocaleString()}</div>
+    </div>`;
+}
+async function render(){
+  const r = await fetchRestaurant();
+  if(!r){ elInfo.innerHTML = `<div class="err">Restaurante no encontrado</div>`; return; }
+  elTitle.textContent = r.name;
+  elInfo.innerHTML = infoView(r);
+  const vs = await fetchReviews();
+  elReviews.innerHTML = vs.length ? vs.map(reviewItem).join('') : `<div class="small">Aún no hay reviews.</div>`;
+}
+
+// crear review
+document.getElementById('formReview').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const restaurantId = id;
+  const user = document.getElementById('revUser').value.trim();
+  const rating = Number(document.getElementById('revRating').value);
+  const comment = document.getElementById('revComment').value.trim();
+  const msg = document.getElementById('msgV');
+
+  if(!rating){ msg.textContent = 'Rating requerido'; msg.className='err'; return; }
+
+  const res = await fetch(`${API}/reviews`,{
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    // Si tu endpoint requiere auth: añade 'Authorization': 'Bearer ...'
+    body: JSON.stringify({ restaurantId, user, rating, comment })
+  });
+  if(res.ok){
+    msg.textContent = 'Review creada';
+    msg.className = 'ok';
+    (e.target).reset();
+    render();
+  }else{
+    const j = await res.json().catch(()=>({message:'Error'}));
+    msg.textContent = j.message || 'Error al crear review';
+    msg.className = 'err';
+  }
+});
+
+render().catch(err=>{ elInfo.innerHTML = `<div class="err">${err.message}</div>`; });
+</script>
+</body>
+</html>

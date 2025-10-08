@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usuarios</title>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="hdr">
+    <h1>Usuarios</h1>
+    <div class="nav">
+      <a class="btn" href="./index.html">Restaurantes</a>
+      <a class="btn" href="./users.html">Usuarios</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Crear usuario</h3>
+    <form class="form" id="formUser">
+      <div>
+        <label>Nombre *</label>
+        <input class="input" id="uName" required/>
+      </div>
+      <div>
+        <label>Email *</label>
+        <input class="input" id="uEmail" type="email" required/>
+      </div>
+      <div>
+        <label>Email verificado</label>
+        <select class="input" id="uVerified">
+          <option value="false">No</option>
+          <option value="true">Sí</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="btn btn-acc" type="submit">Guardar</button>
+        <div id="msgU" class="small"></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Lista</h3>
+    <table class="table" id="tblUsers">
+      <thead><tr><th>Nombre</th><th>Email</th><th>Verificado</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="footer">UI mínima – Usuarios</div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+
+async function loadUsers(){
+  const res = await fetch(`${API}/users`);
+  if(!res.ok) throw new Error('Error al cargar usuarios');
+  return await res.json();
+}
+function row(u){
+  return `<tr>
+    <td>${u.name}</td>
+    <td>${u.email}</td>
+    <td>${u.emailVerified ? '✅' : '—'}</td>
+    <td><button class="btn" onclick="delUser('${u._id}')">Eliminar</button></td>
+  </tr>`;
+}
+async function render(){
+  const data = await loadUsers();
+  const tbody = document.querySelector('#tblUsers tbody');
+  tbody.innerHTML = data.map(row).join('');
+}
+
+async function delUser(id){
+  if(!confirm('¿Eliminar usuario?')) return;
+  const res = await fetch(`${API}/users/${id}`,{
+    method:'DELETE',
+    // Si tienes auth:
+    // headers:{ Authorization: 'Bearer TU_TOKEN' }
+  });
+  if(res.status===204){ render(); }
+  else{
+    const j = await res.json().catch(()=>({message:'Error'}));
+    alert(j.message || 'Error al eliminar');
+  }
+}
+
+document.getElementById('formUser').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('uName').value.trim();
+  const email = document.getElementById('uEmail').value.trim();
+  const emailVerified = document.getElementById('uVerified').value === 'true';
+  const msg = document.getElementById('msgU');
+
+  const res = await fetch(`${API}/users`,{
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    // Si tu ruta POST /users está protegida por authMiddleware:
+    // headers:{ 'Content-Type':'application/json', Authorization:'Bearer TU_TOKEN' },
+    body: JSON.stringify({ name, email, emailVerified })
+  });
+  if(res.ok){
+    msg.textContent = 'Usuario creado';
+    msg.className = 'ok';
+    (e.target).reset();
+    render();
+  }else{
+    const j = await res.json().catch(()=>({message:'Error'}));
+    msg.textContent = j.message || 'Error al crear';
+    msg.className = 'err';
+  }
+});
+
+render().catch(err=> alert(err.message));
+</script>
+</body>
+</html>

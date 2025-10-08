@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Restaurantes</title>
+  <link rel="stylesheet" href="/static/styles/styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="hdr">
+    <h1>Restaurantes</h1>
+    <div class="nav">
+      <a class="btn" href="./index.html">Restaurantes</a>
+      <a class="btn" href="./users.html">Usuarios</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <div class="row" style="gap:8px">
+        <button class="btn btn-acc" id="btnLoad">Cargar</button>
+        <button class="btn" id="btnSort">Ordenar por review</button>
+      </div>
+      <div class="row">
+        <span class="badge" id="count">0 resultados</span>
+      </div>
+    </div>
+    <div class="grid" id="list"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Crear restaurante</h3>
+    <form class="form" id="formCreateRestaurant">
+      <div>
+        <label>Nombre *</label>
+        <input class="input" id="rName" required/>
+        <div class="small">No se permiten duplicados (validación simple por nombre).</div>
+      </div>
+      <div>
+        <label>Ubicación</label>
+        <input class="input" id="rLocation"/>
+      </div>
+      <div>
+        <label>Cocina</label>
+        <input class="input" id="rCuisine" placeholder="Mexicana, Italiana..."/>
+      </div>
+      <div class="row">
+        <button class="btn btn-acc" type="submit">Guardar</button>
+        <div id="msgR" class="small"></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer"></div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+
+const elList = document.getElementById('list');
+const elCount = document.getElementById('count');
+const btnLoad = document.getElementById('btnLoad');
+const btnSort = document.getElementById('btnSort');
+
+async function fetchRestaurants(sorted=false){
+  const url = sorted ? `${API}/restaurants?sort=review` : `${API}/restaurants`;
+  const res = await fetch(url);
+  if(!res.ok){ throw new Error('Error al cargar restaurantes'); }
+  return await res.json();
+}
+
+function card(r){
+  const rating = r.avgRating ?? r.averageRating ?? '—';
+  return `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:16px;font-weight:700;">${r.name}</div>
+          <div class="small">${r.location || ''} ${r.cuisine ? ' · ' + r.cuisine : ''}</div>
+        </div>
+        <div class="badge"><span class="rating">★ ${typeof rating === 'number' ? rating.toFixed(1): rating}</span></div>
+      </div>
+      <hr/>
+      <div class="row" style="gap:8px">
+        <a class="btn btn-acc" href="./restaurant.html?id=${r._id}">Ver detalle</a>
+      </div>
+    </div>`;
+}
+
+async function render(sorted=false){
+  elList.innerHTML = '';
+  const data = await fetchRestaurants(sorted);
+  elCount.textContent = `${data.length} resultados`;
+  elList.innerHTML = data.map(card).join('');
+}
+
+btnLoad.addEventListener('click', ()=>render(false));
+btnSort.addEventListener('click', ()=>render(true));
+
+// Crear restaurante (validación simple: no duplicar nombre)
+document.getElementById('formCreateRestaurant').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('rName').value.trim();
+  const location = document.getElementById('rLocation').value.trim();
+  const cuisine = document.getElementById('rCuisine').value.trim();
+  const msg = document.getElementById('msgR');
+
+  if(!name){ msg.textContent = 'El nombre es requerido'; msg.className='err'; return; }
+
+  // validación simple en front (no es sustituto de la del back)
+  const existing = await fetchRestaurants(false);
+  if(existing.some(r => r.name.toLowerCase() === name.toLowerCase())){
+    msg.textContent = 'Ya existe un restaurante con ese nombre';
+    msg.className = 'err';
+    return;
+  }
+
+  const res = await fetch(`${API}/restaurants`,{
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ name, location, cuisine })
+  });
+  if(res.ok){
+    msg.textContent = 'Restaurante creado';
+    msg.className = 'ok';
+    (e.target).reset();
+    render(false);
+  }else{
+    const j = await res.json().catch(()=>({message:'Error'}));
+    msg.textContent = j.message || 'Error al crear';
+    msg.className='err';
+  }
+});
+
+// carga inicial
+render(false).catch(err=>{ elList.innerHTML=`<div class="err">${err.message}</div>` });
+</script>
+</body>
+</html>
