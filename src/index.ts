@@ -13,6 +13,10 @@ import routes from './app/routes'
 const port = process.env.PORT || 3000;
 const app = express();
 
+// Parse JSON bodies
+app.use(express.json());
+
+// Register routes (they expect JSON body parsing)
 app.use(routes);
 
 app.get('', (req, res)=> {

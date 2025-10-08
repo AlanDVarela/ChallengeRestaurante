@@ -5,14 +5,14 @@ export interface IUser {
     _id?: Types.ObjectId;
     name: string;
     email: string;
-    emailVerified: boolean;
+    passwordHash?: string;
 }
 
 const UserSchema = new Schema(
     {
         name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, default: false },
+        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        passwordHash: { type: String },
     },
     { timestamps: true }
 );

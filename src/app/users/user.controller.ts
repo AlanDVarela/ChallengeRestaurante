@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from './user.model';
+import bcrypt from 'bcryptjs';
 
 // Listar usuarios
 export async function listUsers(req: Request, res: Response) {
@@ -28,13 +29,15 @@ export async function getUserById(req: Request, res: Response) {
 // Crear usuario
 export async function createUser(req: Request, res: Response) {
 	try {
-		const { name, email, emailVerified } = req.body;
-		if (!name || !email) return res.status(400).json({ message: 'Faltan campos requeridos' });
+		const { name, email, password } = req.body;
+		if (!name || !email || !password) return res.status(400).json({ message: 'Faltan campos requeridos' });
 
 		const exists = await User.findOne({ email }).lean();
 		if (exists) return res.status(409).json({ message: 'Email ya registrado' });
 
-		const created = await User.create({ name, email, emailVerified });
+		const salt = await bcrypt.genSalt(10);
+		const passwordHash = await bcrypt.hash(password, salt);
+		const created = await User.create({ name, email, passwordHash });
 		res.status(201).json(created);
 	} catch (err) {
 		console.error(err);
@@ -45,9 +48,9 @@ export async function createUser(req: Request, res: Response) {
 // Actualizar usuario
 export async function updateUser(req: Request, res: Response) {
 	try {
-		const { id } = req.params;
+		const { email } = req.params;
 		const updates = req.body;
-		const updated = await User.findByIdAndUpdate(id, updates, { new: true }).lean();
+		const updated = await User.findOneAndUpdate({ email }, updates, { new: true }).lean();
 		if (!updated) return res.status(404).json({ message: 'Usuario no encontrado' });
 		res.json(updated);
 	} catch (err) {
@@ -59,8 +62,8 @@ export async function updateUser(req: Request, res: Response) {
 // Eliminar usuario
 export async function deleteUser(req: Request, res: Response) {
 	try {
-		const { id } = req.params;
-		const removed = await User.findByIdAndDelete(id).lean();
+		const { email } = req.params;
+		const removed = await User.findOneAndDelete({ email }).lean();
 		if (!removed) return res.status(404).json({ message: 'Usuario no encontrado' });
 		res.status(204).send();
 	} catch (err) {
