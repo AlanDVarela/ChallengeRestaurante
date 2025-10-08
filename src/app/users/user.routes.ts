@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
 	listUsers,
-	getUserById,
+	getUserByEmail,
 	createUser,
 	updateUser,
 	deleteUser,
@@ -14,7 +14,7 @@ const router = Router();
 router.get('/', listUsers);
 
 // Obtener por ID
-router.get('/:id', getUserById);
+router.get('/:email', getUserByEmail);
 
 // Crear (registro público)
 router.post('/register', createUser);

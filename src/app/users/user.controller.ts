@@ -14,10 +14,10 @@ export async function listUsers(req: Request, res: Response) {
 }
 
 // Obtener usuario por ID
-export async function getUserById(req: Request, res: Response) {
+export async function getUserByEmail(req: Request, res: Response) {
 	try {
-		const { id } = req.params;
-		const item = await User.findById(id).lean();
+		const { email } = req.params;
+		const item = await User.findOne({ email }).lean();
 		if (!item) return res.status(404).json({ message: 'Usuario no encontrado' });
 		res.json(item);
 	} catch (err) {
