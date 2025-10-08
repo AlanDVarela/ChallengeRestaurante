@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {static as static_} from 'express';
 import dotenv from 'dotenv'
 dotenv.config();
 
@@ -7,11 +7,14 @@ import { setup, serve} from  'swagger-ui-express'
 import swaggerOptions  from './../swagger.config';
 import dbConnect from './database/index'
 
-import routes from './app/routes'
 
+import routes from './app/routes'
+import path from 'path'
 
 const port = process.env.PORT || 3000;
 const app = express();
+
+app.use('/static', static_(path.join(__dirname, '..','public')));
 
 app.use(routes);
 
