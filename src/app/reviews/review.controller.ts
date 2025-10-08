@@ -1,51 +1,70 @@
 import { Request, Response } from "express";
+import { Review } from "../reviews/review.model";
 
-/* GET /reviews */
-export function listReviews(req: Request, res: Response) {
-  res.json([
-    {
-      id: "rev1",
-      reservationId: "res1",
-      userId: "user1",
-      experienceId: "exp1",
-      guideId: "g1",
-      experienceRating: 5,
-      guideRating: 5,
-      comment: "Excelente experiencia, guía muy profesional.",
-      photos: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ]);
-}
+export const getReviews = async (req: Request, res: Response) => {
+  try {
+    const filter: any = {};
+    if (req.query.restaurantId) filter.restaurantId = req.query.restaurantId;
 
-/* GET /reviews/:id */
-export function getReviewById(req: Request, res: Response) {
-  res.json({ id: req.params.id });
-}
+    const query = Review.find(filter);
+    if (req.query.populate) query.populate("restaurantId");
 
-/* POST /reviews */
-export function createReview(req: Request, res: Response) {
-  const now = new Date().toISOString();
-  res.status(201).json({
-    id: "new_rev_id",
-    ...req.body,
-    photos: req.body.photos ?? [],
-    createdAt: now,
-    updatedAt: now,
-  });
-}
+    const reviews = await query.exec();
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+};
 
-/* PATCH /reviews/:id */
-export function updateReview(req: Request, res: Response) {
-  res.json({
-    id: req.params.id,
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  });
-}
+export const getReviewById = async (req: Request, res: Response) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ error: "Review no encontrada" });
+    res.json(review);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+};
 
-/* DELETE /reviews/:id */
-export function deleteReview(req: Request, res: Response) {
-  res.status(204).send();
-}
+export const createReview = async (req: Request, res: Response) => {
+  try {
+    const review = await Review.create(req.body);
+    res.status(201).json(review);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+};
+
+export const updateReview = async (req: Request, res: Response) => {
+  try {
+    const review = await Review.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!review) return res.status(404).json({ error: "Review no encontrada" });
+    res.json(review);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+};
+
+export const deleteReview = async (req: Request, res: Response) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) return res.status(404).json({ error: "Review no encontrada" });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+};
+
+// Opcional: listar reviews por restaurante (atajo)
+export const getReviewsByRestaurant = async (req: Request, res: Response) => {
+  try {
+    const reviews = await Review.find({ restaurantId: req.params.restaurantId });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+};
